@@ -13,13 +13,14 @@ import (
 // If the path is not provided in the map, then the fallback
 // http.Handler will be called instead.
 func MapHandler(pathsToUrls map[string]string, fallback http.Handler) http.HandlerFunc {
-	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+	return func(w http.ResponseWriter, r *http.Request) {
 		url, found := pathsToUrls[r.RequestURI]
 		if found {
 			http.Redirect(w, r, url, 307)
+			return
 		}
 		fallback.ServeHTTP(w, r)
-	})
+	}
 }
 
 type pathToURL struct {
@@ -56,5 +57,5 @@ func YAMLHandler(yml []byte, fallback http.Handler) (http.HandlerFunc, error) {
 		pathsToUrls[v.Path] = v.URL
 	}
 
-	return http.HandlerFunc(MapHandler(pathsToUrls, fallback)), nil
+	return MapHandler(pathsToUrls, fallback), nil
 }
